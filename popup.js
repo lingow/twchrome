@@ -143,9 +143,7 @@ document.getElementById('addtaskform').addEventListener('submit', function(e) {
 			.then( response => {
         if ( response.ok ) {
           console.log("Created the task successfully.")
-          syncIntheAm();
-          // Refresh the list
-          loadTheTaskList()
+          syncIntheAm(loadTheTaskList);
         } else {
           console.log("Failed to create the task. Response:" + response );
         }
