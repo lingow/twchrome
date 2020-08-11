@@ -5,6 +5,7 @@
 * Lists tasks.
 * Mark completed with a click
 * Create new tasks similarly to how it's done in the commandline.
+* Display number of urgent items in different preset urgency buckets.
 
 ## Instructions
 
