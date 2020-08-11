@@ -55,7 +55,16 @@ function taskToHTMLNode(task){
       "L":"bg-secondary"
     }
     let bg_color_class = priority_to_bg_map[task.priority] || "bg-info";
-    task_listitem.querySelector(".todo-indicator").classList.add(bg_color_class);
+    task_listitem.querySelector(".priority-indicator").classList.add(bg_color_class);
+  }
+
+  if (task.urgency) {
+    for(let b in urgencybuckets) {
+      if (urgencybuckets[b].urgency < task.urgency ) {
+        task_listitem.querySelector(".urgency-indicator").style.backgroundColor = urgencybuckets[b].color;
+        break;
+      }
+    }
   }
 
   let taskdonebutton = task_listitem.querySelector(".task-done-button");
