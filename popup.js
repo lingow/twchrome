@@ -28,24 +28,55 @@ function taskToHTMLNode(task){
   if (task.project) {
     task_listitem.querySelector(".widget-subheading").appendChild(document.createTextNode(task.project));
   }
+  let badge_colors=[
+    "badge-primary",
+    "badge-secondary",
+    "badge-success",
+    "badge-danger",
+    "badge-warning",
+    "badge-info",
+    "badge-light",
+    "badge-dark"
+  ];
   if (task.tags) {
     for ( let i in task.tags ){
       let tag = task.tags[i];
       let tag_node = document.getElementById('tasktag_template').content.cloneNode(true).querySelector(".badge");
       tag_node.appendChild(document.createTextNode(tag));
-      let badge_colors=[
-        "badge-primary",
-        "badge-secondary",
-        "badge-success",
-        "badge-danger",
-        "badge-warning",
-        "badge-info",
-        "badge-light",
-        "badge-dark"
-      ];
       let badge_color=badge_colors[hashCode(tag) % badge_colors.length];
       tag_node.classList.add(badge_color);
       task_listitem.querySelector(".widget-heading").appendChild(tag_node);
+    }
+  }
+  if (task.annotations) {
+    for ( let i in task.annotations ){
+      let annotation = task.annotations[i];
+      let annotation_node = document.getElementById('taskpill_template').content.cloneNode(true).querySelector(".badge");
+      let icon = document.createElement("i");
+      icon.classList.add("fa");
+      annotation_node.appendChild(icon);
+
+      function isUrl(text){
+        let urlRegex =/(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+        return text.match(urlRegex);
+      }
+      if ( isUrl(annotation) ){
+        annotation_node.classList.add("badge-primary");
+        icon.classList.add("fa-link");
+        let a = document.createElement("a");
+        a.href=annotation;
+        a.target="_blank";
+        a.appendChild(annotation_node);
+        task_listitem.querySelector(".widget-subheading").appendChild(a);
+      } else {
+        annotation_node.classList.add("badge-info");
+        annotation_node.setAttribute("data-toggle","tooltip");
+        annotation_node.setAttribute("data-placement","bottom");
+        annotation_node.setAttribute("title",annotation);
+        $(annotation_node).tooltip();
+        icon.classList.add("fa-sticky-note");
+        task_listitem.querySelector(".widget-subheading").appendChild(annotation_node);
+      }
     }
   }
   if (task.priority) {
@@ -181,7 +212,8 @@ function parseDescription(description){
     "wait": /\bwa?i?t?:(\S*)\b/,
     "until": /\bun?t?i?l?:(\S*)\b/,
     "scheduled": /\bsch?e?d?u?l?e?d?:(\S*)\b/,
-    "start": /\bsta?r?t?:(\S*)\b/
+    "start": /\bsta?r?t?:(\S*)\b/,
+    "annotations": /\ban?n?o?t?a?t?i?o?n?s?:(\S*)\b/
   };
   let pure_description = [];
 
@@ -194,15 +226,13 @@ function parseDescription(description){
       let regex = keywords[k];
       m = word.match(regex);
       if (m) {
-        if ( k == "depends" ) {
-          // depends is a comma separated list
-          newtask[k] = m[1].split(",");
-        } else if ( k == "tags" ) {
-          // tags can be specified multiple times
+        if ( ["tags","depends","annotations"].includes(k) ) {
+          // These are tokens that can be specified multiple times or 
+          // through comma separated lists
           if ( !newtask[k]) {
             newtask[k] = [];
           }
-          newtask[k].push(m[1]);
+          newtask[k].push(...m[1].split(","));
         } else {
           newtask[k]=m[1];
         }
