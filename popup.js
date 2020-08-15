@@ -16,6 +16,16 @@ function loadTheTaskList() {
 }
 loadTheTaskList();
 
+
+function updateTaskList(){
+  // This function should actually
+  // Get the stored tasklist
+  // Request the server for the new tasklist
+  // Get the differences
+  // Update the ui to reflect the differences
+  syncIntheAm(function() { location.reload();}); // for the lazy
+}
+
 function taskToHTMLNode(task){
   let task_listitem = document.getElementById('taskentry_template').content.cloneNode(true).querySelector('.list-group-item');
   let heading = task_listitem.querySelector(".widget-heading");
@@ -107,7 +117,67 @@ function taskToHTMLNode(task){
       heading.classList.remove("text-decoration-line-through");
     });
   });
+
+  let taskstartbutton = task_listitem.querySelector(".task-start-button");
+  let taskstarticon = taskstartbutton.querySelector(".task-start-icon");
+  function setStartedButton(){
+    taskstartbutton.classList.remove("btn-outline-warning");
+    taskstartbutton.classList.add("btn-outline-secondary");
+    taskstarticon.classList.remove("fa-play");
+    taskstarticon.classList.add("fa-stop");
+  }
+  function setStoppedButton(){
+    taskstartbutton.classList.remove("btn-outline-secondary");
+    taskstartbutton.classList.add("btn-outline-warning");
+    taskstarticon.classList.remove("fa-stop");
+    taskstarticon.classList.add("fa-play");
+  }
+  if ( task.start ){
+    setStartedButton();
+  } else {
+    setStoppedButton();
+  }
+  taskstartbutton.addEventListener("click", function() {
+    let startstop=(task.start)? "stop" : "start";
+    apiCall({
+      "endpoint": 'https://inthe.am/api/v2/tasks/'+ task.id + '/' + startstop+ "/",
+      "method": "POST",
+      "onsuccess": updateTaskList,
+      "onfailure": function() {
+        console.log("Failed to mark task as " + startstop + ": " + task.id);
+      }
+    });
+  });
+
   return task_listitem;
+}
+
+function apiCall(options){
+	chrome.storage.sync.get('intheamapikey',function(items){
+		let apikey = items['intheamapikey'];
+		if (apikey) {
+			// Send the API call to mark the task as Done
+			fetch(options['endpoint'] ,{
+				'method': options['method'],
+				'headers': $.extend({},options['headers'],{
+					'Authorization': "Token ".concat(apikey)
+				})
+			})
+			.then( response => {
+        if ( response.ok ) {
+          options['onsuccess']();
+        } else {
+          options['onfailure']();
+        }
+      }, 
+			reason => {
+        options['onfailure']();
+      });
+		} else {
+			console.log("API key has to be set in the extension options.");
+      options['onfailure']();
+		}
+	});
 }
 
 function markTaskAsDone(task, node, onfailure) {
