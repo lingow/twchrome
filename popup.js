@@ -102,7 +102,7 @@ function taskToHTMLNode(task){
   if (task.urgency) {
     for(let b in urgencybuckets) {
       if (urgencybuckets[b].urgency < task.urgency ) {
-        task_listitem.querySelector(".urgency-indicator").style.backgroundColor = urgencybuckets[b].color;
+        task_listitem.querySelector(".urgency-indicator").style.backgroundColor = urgencybuckets[b?b-1:b].color;
         break;
       }
     }
