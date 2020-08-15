@@ -1,10 +1,42 @@
 const hashCode=s=>{for(var i=0,h;i<s.length;i++)h=Math.imul(31,h)+s.charCodeAt(i)|0;return h}
 
+let badge_colors=[
+  "badge-primary",
+  "badge-secondary",
+  "badge-success",
+  "badge-danger",
+  "badge-warning",
+  "badge-info",
+  "badge-light",
+  "badge-dark"
+];
+
 function loadTheTaskList() {
-  chrome.storage.local.get('tasklist',function(items){
+  chrome.storage.local.get(['tasklist','taskfilters'],function(items){
     let tasklist = document.getElementById("tasklist");
     tasklist.innerHTML='';
     let servertasklist = items['tasklist']
+    let taskfilters = items['taskfilters'];
+    if (taskfilters) {
+      let filter_list = document.getElementById("filter-list");
+      servertasklist = filterTaskList(servertasklist,taskfilters);
+      for( let i in taskfilters ){
+        let tf = taskfilters[i];
+        let filter_badge = document.createElement("div");
+        filter_badge.classList.add("badge");
+        filter_badge.classList.add("badge-pill");
+        let badge_color=badge_colors[hashCode(tf['value']) % badge_colors.length];
+        filter_badge.classList.add(badge_color);
+        let a = document.createElement("a");
+        a.href="#";
+        a.addEventListener("click",function(){
+          removeTaskFilter(tf,updateTaskList);
+        });
+        filter_badge.appendChild(document.createTextNode(tf['value'] +  " [x]"));
+        a.appendChild(filter_badge);
+        filter_list.appendChild(a);
+      }
+    }
     servertasklist.sort( (a,b) => b.urgency - a.urgency);
     for (let i in servertasklist) {
       let task = servertasklist[i];
@@ -26,6 +58,31 @@ function updateTaskList(){
   syncIntheAm(function() { location.reload();}); // for the lazy
 }
 
+function addTaskFilter(spec, callback){
+  chrome.storage.local.get('taskfilters',function(items){
+    let taskfilters = items['taskfilters'];
+    if (! taskfilters ) {
+      taskfilters=[];
+    }
+    if (! taskfilters.some(tf => tf.value == spec.value && tf.type == spec.type)) {
+      taskfilters.push(spec);
+      chrome.storage.local.set({'taskfilters':taskfilters}, function(){
+        callback(taskfilters)
+      });
+    }
+  });
+}
+
+function removeTaskFilter(spec, callback){
+  chrome.storage.local.get('taskfilters',function(items){
+    let taskfilters = items['taskfilters'];
+    taskfilters = taskfilters.filter( tf => ! ( tf.value == spec.value && tf.type == spec.type ) );
+    chrome.storage.local.set({'taskfilters':taskfilters}, function(){
+      callback(taskfilters)
+    });
+  });
+}
+
 function taskToHTMLNode(task){
   let task_listitem = document.getElementById('taskentry_template').content.cloneNode(true).querySelector('.list-group-item');
   let heading = task_listitem.querySelector(".widget-heading");
@@ -36,26 +93,43 @@ function taskToHTMLNode(task){
   link.href = "https://inthe.am/tasks/" + task.id;
 
   if (task.project) {
-    task_listitem.querySelector(".widget-subheading").appendChild(document.createTextNode(task.project));
+    let project_components = task.project.split(".");
+    let subheading = task_listitem.querySelector(".widget-subheading");
+    for (let i = 0 ; i < project_components.length ; i++) {
+      let project_component = project_components[i];
+      let a = document.createElement("a");
+      a.appendChild(document.createTextNode(project_component));
+      a.href="#";
+      a.addEventListener("click", function () {
+        addTaskFilter({
+          "type": "project",
+          "value": project_components.slice(0,i+1).join(".")
+        },updateTaskList);
+      });
+      if ( i > 0 ) {
+        subheading.appendChild(document.createTextNode("."));
+      }
+      subheading.appendChild(a);
+    }
   }
-  let badge_colors=[
-    "badge-primary",
-    "badge-secondary",
-    "badge-success",
-    "badge-danger",
-    "badge-warning",
-    "badge-info",
-    "badge-light",
-    "badge-dark"
-  ];
   if (task.tags) {
     for ( let i in task.tags ){
+      let tag_a = document.createElement('a');
+      tag_a.href="#";
       let tag = task.tags[i];
       let tag_node = document.getElementById('tasktag_template').content.cloneNode(true).querySelector(".badge");
       tag_node.appendChild(document.createTextNode(tag));
+      tag_a.appendChild(tag_node);
+
       let badge_color=badge_colors[hashCode(tag) % badge_colors.length];
       tag_node.classList.add(badge_color);
-      task_listitem.querySelector(".widget-heading").appendChild(tag_node);
+      task_listitem.querySelector(".widget-heading").appendChild(tag_a);
+      tag_a.addEventListener("click", function (){
+        addTaskFilter({
+          "type": "tag",
+          "value": tag
+        },updateTaskList);
+      });
     }
   }
   if (task.annotations) {

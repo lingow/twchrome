@@ -1,3 +1,15 @@
+function filterTaskList(tasklist, filters){
+  for (let i in filters){
+    let tf = filters[i];
+    if (tf['type'] == "tag"){
+      tasklist = tasklist.filter(t => t.tags && t.tags.includes(tf['value']));
+    } else if ( tf['type'] == 'project' ){
+      tasklist = tasklist.filter(t => t.project && t.project.startsWith(tf['value']));
+    }
+  }
+  return tasklist;
+}
+
 function syncIntheAm(callback){
   chrome.storage.sync.get('intheamapikey',function(items){
     let apikey = items['intheamapikey'];
@@ -11,7 +23,9 @@ function syncIntheAm(callback){
       .then( function(tasklist) {
         chrome.storage.local.set({'tasklist':tasklist},function(){
           console.log("Updated tasklist");
-          updateIconBadge(tasklist);
+          withTaskFilters(function(taskfilters){
+            updateIconBadge(filterTaskList(tasklist,taskfilters));
+          });
           if (callback){
             callback(tasklist);
           }
@@ -33,6 +47,16 @@ let urgencybuckets = [
   {'urgency': 2, 'color': "ForestGreen"},
   {'urgency': 0, 'color': "DarkCyan"}
 ];
+
+function withTaskFilters(callback){
+  chrome.storage.local.get('taskfilters',function(items){
+    let taskfilters = items['taskfilters'];
+    if (! taskfilters) {
+      taskfilters = [];
+    }
+    callback(taskfilters);
+  });
+}
 
 function updateIconBadge(tasklist) {
   if (!tasklist){
