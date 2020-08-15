@@ -40,6 +40,7 @@ function syncIntheAm(callback){
 }
 
 let urgencybuckets = [
+  {'urgency': Number.POSITIVE_INFINITY, 'color': "DarkBlue"},
   {'urgency': 15, 'color': "DarkViolet"},
   {'urgency': 12, 'color': "DarkRed"},
   {'urgency': 8, 'color': "Orange"},
@@ -58,6 +59,24 @@ function withTaskFilters(callback){
   });
 }
 
+function getTaskUrgencyBucket(urgency){
+  let b;
+  for (b = 1 ; b < urgencybuckets.length ; b++){
+    if ( urgencybuckets[b].urgency <= urgency && urgencybuckets[b-1].urgency > urgency){
+      return b;
+    }
+  }
+  return undefined;
+}
+
+function getTaskUrgencyColor(urgency){
+  let b = getTaskUrgencyBucket(urgency);
+  if (! b){
+    return undefined;
+  }
+  return urgencybuckets[b].color;
+}
+
 function updateIconBadge(tasklist) {
   if (!tasklist){
     // For an empty list, remove the badge
@@ -67,14 +86,10 @@ function updateIconBadge(tasklist) {
   // Sort by urgency
   tasklist.sort((a,b) => b.urgency - a.urgency);
   let count = 0;
-  let b = 0;  // b is short for bucket
   let t = 0;  // t is short for task
-  for (b = 0; b < urgencybuckets.length; b++) {
-    if ( urgencybuckets[b].urgency <= tasklist[t].urgency ){
-      break;
-    }
-  }
-  if ( b >= urgencybuckets.length ) {
+  let b = getTaskUrgencyBucket(tasklist[t].urgency);
+
+  if (!b) {
     // Display no badge if tasks don't fall into any known urgency buckets
     chrome.browserAction.setBadgeText({'text':''});
     return;

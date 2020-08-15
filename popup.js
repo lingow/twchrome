@@ -173,12 +173,10 @@ function taskToHTMLNode(task){
     task_listitem.querySelector(".priority-indicator").classList.add(bg_color_class);
   }
 
-  if (task.urgency) {
-    for(let b in urgencybuckets) {
-      if (urgencybuckets[b].urgency < task.urgency ) {
-        task_listitem.querySelector(".urgency-indicator").style.backgroundColor = urgencybuckets[b?b-1:b].color;
-        break;
-      }
+  if (task.urgency || task.urgency == 0) {
+    let color = getTaskUrgencyColor(task.urgency);
+    if (color) {
+      task_listitem.querySelector(".urgency-indicator").style.backgroundColor = color;
     }
   }
 
