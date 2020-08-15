@@ -26,10 +26,10 @@ function syncIntheAm(callback){
 }
 
 let urgencybuckets = [
-  {'urgency': 15, 'color': "#DarkViolet"},
-  {'urgency': 12, 'color': "#DarkRed"},
+  {'urgency': 15, 'color': "DarkViolet"},
+  {'urgency': 12, 'color': "DarkRed"},
   {'urgency': 8, 'color': "Orange"},
-  {'urgency': 4, 'color': "#DarkGoldenRod"},
+  {'urgency': 4, 'color': "DarkGoldenRod"},
   {'urgency': 2, 'color': "ForestGreen"},
   {'urgency': 0, 'color': "DarkCyan"}
 ];
