@@ -55,6 +55,7 @@ function updateTaskList(){
   // Request the server for the new tasklist
   // Get the differences
   // Update the ui to reflect the differences
+  // Focus on the task adding textbox
   syncIntheAm(function() { location.reload();}); // for the lazy
 }
 
@@ -361,7 +362,7 @@ document.getElementById('addtaskform').addEventListener('submit', function(e) {
         .then( response => {
           if ( response.ok ) {
             console.log("Created the task successfully.")
-            syncIntheAm(loadTheTaskList);
+            updateTaskList();
           } else {
             console.log("Failed to create the task. Response:" + response );
           }
