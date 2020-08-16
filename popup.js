@@ -299,14 +299,10 @@ let addLinkCheckbox = document.getElementById("add-link-checkbox");
 addLinkCheckbox.addEventListener("change", function(){
   if (addLinkCheckbox.checked) {
     // Set link icon
-    addLinkCheckbox.classList.add("fa-link");
     addLinkCheckbox.classList.add("text-primary");
-    addLinkCheckbox.classList.remove("fa-chain-broken");
     addLinkCheckbox.classList.remove("text-secondary");
   } else {
-    addLinkCheckbox.classList.add("fa-chain-broken");
     addLinkCheckbox.classList.add("text-secondary");
-    addLinkCheckbox.classList.remove("fa-link");
     addLinkCheckbox.classList.remove("text-primary");
   }
   chrome.storage.local.set({"add-link-checkbox":addLinkCheckbox.checked});
@@ -315,6 +311,26 @@ chrome.storage.local.get("add-link-checkbox",function(items){
   let checked = items["add-link-checkbox"];
   if ( checked ){
     addLinkCheckbox.click();
+  }
+});
+
+let addFilterCheckbox = document.getElementById("add-filter-checkbox");
+
+addFilterCheckbox.addEventListener("change", function(){
+  if (addFilterCheckbox.checked) {
+    // Set link icon
+    addFilterCheckbox.classList.add("text-primary");
+    addFilterCheckbox.classList.remove("text-secondary");
+  } else {
+    addFilterCheckbox.classList.add("text-secondary");
+    addFilterCheckbox.classList.remove("text-primary");
+  }
+  chrome.storage.local.set({"add-filter-checkbox":addFilterCheckbox.checked});
+});
+chrome.storage.local.get("add-filter-checkbox",function(items){
+  let checked = items["add-filter-checkbox"];
+  if ( checked ){
+    addFilterCheckbox.click();
   }
 });
 
@@ -348,6 +364,43 @@ document.getElementById('addtaskform').addEventListener('submit', function(e) {
           callback(activeTab.url);
         });
       }
+      function withTaskFilters(callback){
+        chrome.storage.local.get('taskfilters',function(items){
+          let taskfilters = items['taskfilters'];
+          if (! taskfilters) {
+            taskfilters = [];
+          }
+          callback(taskfilters);
+        });
+      }
+      function checkTaskFiltersBeforeSendingApiCall(){
+        if (addFilterCheckbox.checked){
+          withTaskFilters(function(taskfilters){
+            // Use the last project in the filters list, and all the tasks,
+            // The project will not be overriden if it is explicitly specified.
+            for (let i in taskfilters){
+              let tf = taskfilters[i];
+              if (tf['type']=='project'){
+                if (! newtask.project) {
+                  newtask.project=tf['value'];
+                }
+              }
+              if (tf['type']=='tag'){
+                if (! newtask.tags) {
+                  newtask.tags=[];
+                }
+                // Add task only if not already there
+                if ( newtask.tags.indexOf(tf['value']) === -1 ){
+                  newtask.tags.push(tf['value']);
+                }
+              }
+            }
+            sendApiCall();
+          });
+        } else {
+          sendApiCall();
+        }
+      }
       function sendApiCall(){
         // Send the API call create the task
         fetch('https://inthe.am/api/v2/tasks/' ,{
@@ -379,10 +432,10 @@ document.getElementById('addtaskform').addEventListener('submit', function(e) {
             newtask.annotations = [];
           }
           newtask.annotations.push(url);
-          sendApiCall();
+          checkTaskFiltersBeforeSendingApiCall();
         });
       } else {
-        sendApiCall();
+        checkTaskFiltersBeforeSendingApiCall();
       }
     }
     else {
