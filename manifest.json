@@ -5,6 +5,7 @@
     "permissions": [
       "storage",
       "alarms",
+      "tabs",
       "https://inthe.am/api/v2/*"
     ],
 		"background": {
@@ -28,5 +29,15 @@
       "128": "images/icon128.png"
     },
     "options_page": "options.html",
+    "commands": {
+			"_execute_browser_action": {
+				"suggested_key": {
+					"windows": "Alt+Shift+K",
+					"mac": "Alt+Shift+K",
+					"chromeos": "Alt+Shift+K",
+					"linux": "Alt+Shift+K"
+				}
+			}
+    },
     "manifest_version": 2
 }

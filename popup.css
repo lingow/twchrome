@@ -186,3 +186,15 @@ i {
 .priority-indicator {
   margin-left: 8px;
 }
+
+.icon-checkbox {
+	cursor: pointer;
+}
+
+.icon-checkbox:before {
+ visibility: visible;
+}
+
+input[type=checkbox].icon-checkbox{
+    visibility: hidden;
+}

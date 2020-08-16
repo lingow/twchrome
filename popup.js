@@ -293,6 +293,30 @@ function markTaskAsDone(task, node, onfailure) {
 	});
 }
 
+let addLinkCheckbox = document.getElementById("add-link-checkbox");
+
+addLinkCheckbox.addEventListener("change", function(){
+  if (addLinkCheckbox.checked) {
+    // Set link icon
+    addLinkCheckbox.classList.add("fa-link");
+    addLinkCheckbox.classList.add("text-primary");
+    addLinkCheckbox.classList.remove("fa-chain-broken");
+    addLinkCheckbox.classList.remove("text-secondary");
+  } else {
+    addLinkCheckbox.classList.add("fa-chain-broken");
+    addLinkCheckbox.classList.add("text-secondary");
+    addLinkCheckbox.classList.remove("fa-link");
+    addLinkCheckbox.classList.remove("text-primary");
+  }
+  chrome.storage.local.set({"add-link-checkbox":addLinkCheckbox.checked});
+});
+chrome.storage.local.get("add-link-checkbox",function(items){
+  let checked = items["add-link-checkbox"];
+  if ( checked ){
+    addLinkCheckbox.click();
+  }
+});
+
 document.getElementById('addtaskform').addEventListener('submit', function(e) {
   e.preventDefault(); // prevents the page from refreshing on submit.
 
@@ -312,35 +336,59 @@ document.getElementById('addtaskform').addEventListener('submit', function(e) {
       let description = description_textbox.value;
       let newtask = parseDescription(description);
       
-			// Send the API call create the task
-			fetch('https://inthe.am/api/v2/tasks/' ,{
-				'method':'POST',
-				'headers': {
-					'Authorization': "Token ".concat(apikey),
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-				},
-        'body': JSON.stringify(newtask)
-			})
-			.then( response => {
-        if ( response.ok ) {
-          console.log("Created the task successfully.")
-          syncIntheAm(loadTheTaskList);
-        } else {
-          console.log("Failed to create the task. Response:" + response );
-        }
-        reEnableTaskAdd();
-      }, 
-			reason => {
-        console.log("Failed to create the task. Reason:" + reason ) 
-        reEnableTaskAdd();
-      });
+      // If add an additional annotation with the active url in case the add
+      // link checkbox is checked.
+      function withCurrentActiveTabUrl(callback){
+        // Get url of the current active tab
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+          // since only one tab should be active and in the current window at once
+          // the return variable should only have one entry
+          let activeTab = tabs[0];
+          callback(activeTab.url);
+        });
+      }
+      function sendApiCall(){
+        // Send the API call create the task
+        fetch('https://inthe.am/api/v2/tasks/' ,{
+          'method':'POST',
+          'headers': {
+            'Authorization': "Token ".concat(apikey),
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          'body': JSON.stringify(newtask)
+        })
+        .then( response => {
+          if ( response.ok ) {
+            console.log("Created the task successfully.")
+            syncIntheAm(loadTheTaskList);
+          } else {
+            console.log("Failed to create the task. Response:" + response );
+          }
+          reEnableTaskAdd();
+        }, 
+        reason => {
+          console.log("Failed to create the task. Reason:" + reason ) 
+          reEnableTaskAdd();
+        });
+      }
+      if (addLinkCheckbox.checked) {
+        withCurrentActiveTabUrl(function(url){
+          if (!newtask.annotations){
+            newtask.annotations = [];
+          }
+          newtask.annotations.push(url);
+          sendApiCall();
+        });
+      } else {
+        sendApiCall();
+      }
     }
     else {
       console.log("Please set an api key in the extension option in order to create tasks.");
     }
   });
-})
+});
 
 function parseDescription(description){
   // See https://intheam.readthedocs.io/en/latest/api/task_format.html for the
