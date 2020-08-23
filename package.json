@@ -1,8 +1,7 @@
 {
-  "name": "ts-jest-chrome-extension-starter",
+  "name": "twchrome",
   "version": "0.1.0",
-  "description": "A starter template to create a Chrome extension with TypeScript and Jest",
-  "main": "index.js",
+  "description": "A Chrome extension for Taskwarrior, using inthe.am as backend.",
   "scripts": {
     "build": "webpack",
     "watch": "webpack -w",
@@ -13,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ninoseki/ts-jest-chrome-extension-starter.git"
+    "url": "git+https://github.com/lingow/twchrome.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ninoseki/ts-jest-chrome-extension-starter/issues"
+    "url": "https://github.com/lingow/twchrome/issues"
   },
-  "homepage": "https://github.com/ninoseki/ts-jest-chrome-extension-starter#readme",
+  "homepage": "https://github.com/lingow/twchrome#readme",
   "devDependencies": {
     "@types/chrome": "0.0.86",
     "@types/jest": "^24.0.13",
@@ -40,6 +39,12 @@
     "ts-loader": "^6.0.2",
     "typescript": "^3.5.1",
     "webpack": "^4.33.0",
-    "webpack-cli": "^3.3.2"
+    "webpack-cli": "^3.3.2",
+    "acorn": "^6.0.0"
+  },
+  "dependencies": {
+    "bootstrap": "^4.5.2",
+    "jquery": "^3.5.1",
+    "popper.js": "^1.16.1"
   }
 }
