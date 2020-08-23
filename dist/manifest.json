@@ -1,33 +1,43 @@
 {
-  "name": "__MSG_extName__",
-  "version": "0.1.0",
-  "manifest_version": 2,
-  "description": "",
-  "homepage_url": "https://github.com/ninoseki/ts-jest-chrome-extension-starter",
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
-  "default_locale": "en",
-  "permissions": ["storage"],
-  "background": {
-    "scripts": ["js/background.js"],
-    "persistent": false
-  },
-  "options_ui": {
-    "page": "options/options.html",
-    "chrome_style": true
-  },
-  "page_action": {
-    "default_icon": {
-      "16": "icons/icon16.png"
+    "name": "Taskwarror for Chrome",
+    "version": "1.0",
+    "description": "List, add and modify tasks from Chrome",
+    "permissions": [
+      "storage",
+      "alarms",
+      "tabs",
+      "https://inthe.am/api/v2/*"
+    ],
+		"background": {
+		  "scripts": [
+        "lib/sync.js",
+        "background/background.js"
+      ],
+      "persistent":false
+		},
+    "browser_action": {
+      "default_popup": "popup/popup.html",
+      "default_icon": {
+        "19": "icons/icon19.png",
+        "38": "icons/icon38.png"
+      }
     },
-    "default_title": "__MSG_pageActionDefaultTitle__",
-    "default_popup": "page_action/page_action.html"
-  },
-  "content_scripts": [{
-    "matches": ["https://*.google.com/*"],
-    "js": ["js/content.js"]
-  }]
+    "icons": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "options_page": "options/options.html",
+    "commands": {
+			"_execute_browser_action": {
+				"suggested_key": {
+					"windows": "Alt+Shift+K",
+					"mac": "Alt+Shift+K",
+					"chromeos": "Alt+Shift+K",
+					"linux": "Alt+Shift+K"
+				}
+			}
+    },
+    "manifest_version": 2
 }
