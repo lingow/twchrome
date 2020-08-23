@@ -19,7 +19,7 @@
 
 - Write code with [TypeScript](https://www.typescriptlang.org/).
 - Unit tests using [Jest](https://facebook.github.io/jest/) & [Sinon.JS](http://sinonjs.org/).
-- Lint using [ESLint](https://eslint.org/).
+- Lint using [tslint](https://palantir.github.io/tslint/)
 - Format using [Prettier](https://prettier.io/).
 
 ## Developing

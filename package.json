@@ -7,7 +7,7 @@
     "watch": "webpack -w",
     "test": "jest",
     "coverage": "jest --coverage",
-    "lint": "eslint src --ext *.ts",
+    "lint": "tslint 'src/**/*.ts'",
     "fmt": "prettier --write src/**/*.ts"
   },
   "repository": {
@@ -26,10 +26,7 @@
     "@types/node": "^12.0.4",
     "@types/sinon": "^7.0.12",
     "@types/sinon-chrome": "^2.2.6",
-    "@typescript-eslint/eslint-plugin": "^1.9.0",
-    "eslint": "^5.16.0",
-    "eslint-config-prettier": "^4.3.0",
-    "eslint-plugin-prettier": "^3.1.0",
+    "acorn": "^6.0.0",
     "jest": "^24.8.0",
     "prettier": "^1.17.1",
     "sinon": "^7.3.2",
@@ -37,10 +34,10 @@
     "ts-jest": "^24.0.2",
     "ts-lint": "^4.5.1",
     "ts-loader": "^6.0.2",
+    "tslint": "^6.1.3",
     "typescript": "^3.5.1",
     "webpack": "^4.33.0",
-    "webpack-cli": "^3.3.2",
-    "acorn": "^6.0.0"
+    "webpack-cli": "^3.3.2"
   },
   "dependencies": {
     "bootstrap": "^4.5.2",
