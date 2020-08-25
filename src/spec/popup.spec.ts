@@ -1,6 +1,6 @@
 import * as chrome from "sinon-chrome";
 
-import { test } from "../content";
+import { test } from "../popup";
 
 describe("content_scripts", () => {
   beforeEach(() => {

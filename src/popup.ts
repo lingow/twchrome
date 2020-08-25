@@ -91,11 +91,12 @@ function removeTaskFilter(spec, callback){
 }
 
 function taskToHTMLNode(task){
-  let task_listitem = document.getElementById('taskentry_template').content.cloneNode(true).querySelector('.list-group-item');
+  let task_listitem =
+    (<Element>(<HTMLTemplateElement>document.getElementById('taskentry_template')).content.cloneNode(true)).querySelector('.list-group-item');
   let heading = task_listitem.querySelector(".widget-heading");
   heading.appendChild(document.createTextNode(task.description));
 
-  let link = task_listitem.querySelector(".task-link");
+  let link = <HTMLAnchorElement>task_listitem.querySelector(".task-link");
   link.title = task.description;
   link.href = "https://inthe.am/tasks/" + task.id;
 
@@ -124,7 +125,8 @@ function taskToHTMLNode(task){
       let tag_a = document.createElement('a');
       tag_a.href="#";
       let tag = task.tags[i];
-      let tag_node = document.getElementById('tasktag_template').content.cloneNode(true).querySelector(".badge");
+      let tag_node =
+        (<Element>(<HTMLTemplateElement>document.getElementById('tasktag_template')).content.cloneNode(true)).querySelector(".badge");
       tag_node.appendChild(document.createTextNode(tag));
       tag_a.appendChild(tag_node);
 
@@ -142,12 +144,13 @@ function taskToHTMLNode(task){
   if (task.annotations) {
     for ( let i in task.annotations ){
       let annotation = task.annotations[i];
-      let annotation_node = document.getElementById('taskpill_template').content.cloneNode(true).querySelector(".badge");
+      let annotation_node =
+        (<Element>(<HTMLTemplateElement>document.getElementById('taskpill_template')).content.cloneNode(true)).querySelector(".badge");
       let icon = document.createElement("i");
       icon.classList.add("fa");
       annotation_node.appendChild(icon);
 
-      function isUrl(text){
+      const isUrl = function(text){
         let urlRegex =/(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
         return text.match(urlRegex);
       }
@@ -164,7 +167,7 @@ function taskToHTMLNode(task){
         annotation_node.setAttribute("data-toggle","tooltip");
         annotation_node.setAttribute("data-placement","bottom");
         annotation_node.setAttribute("title",annotation);
-        $(annotation_node).tooltip();
+        (<any>$(annotation_node)).tooltip();
         icon.classList.add("fa-sticky-note");
         task_listitem.querySelector(".widget-subheading").appendChild(annotation_node);
       }
@@ -183,13 +186,13 @@ function taskToHTMLNode(task){
   if (task.urgency || task.urgency == 0) {
     let color = getTaskUrgencyColor(task.urgency);
     if (color) {
-      task_listitem.querySelector(".urgency-indicator").style.backgroundColor = color;
+      (<HTMLDivElement>task_listitem.querySelector(".urgency-indicator")).style.backgroundColor = color;
     }
   }
 
   let taskdonebutton = task_listitem.querySelector(".task-done-button");
   taskdonebutton.addEventListener("click", function() {
-    taskdonebutton.setAttribute("disabled",true);
+    taskdonebutton.setAttribute("disabled","true");
     heading.classList.add("text-decoration-line-through");
 		markTaskAsDone(task,task_listitem, function(){
       taskdonebutton.removeAttribute("disabled");
@@ -300,7 +303,7 @@ function markTaskAsDone(task, node, onfailure) {
 	});
 }
 
-let addLinkCheckbox = document.getElementById("add-link-checkbox");
+let addLinkCheckbox = <HTMLInputElement>document.getElementById("add-link-checkbox");
 
 addLinkCheckbox.addEventListener("change", function(){
   if (addLinkCheckbox.checked) {
@@ -320,7 +323,7 @@ chrome.storage.local.get("add-link-checkbox",function(items){
   }
 });
 
-let addFilterCheckbox = document.getElementById("add-filter-checkbox");
+let addFilterCheckbox = <HTMLInputElement>document.getElementById("add-filter-checkbox");
 
 addFilterCheckbox.addEventListener("change", function(){
   if (addFilterCheckbox.checked) {
@@ -348,10 +351,10 @@ document.getElementById('addtaskform').addEventListener('submit', function(e) {
     if (apikey) {
       // Disable the add button to avoid repeated submissions
       let addbutton = document.getElementById('addtask');
-      let description_textbox = document.getElementById('taskdescription');
-      addbutton.setAttribute("disabled",true);
-      description_textbox.setAttribute("disabled",true);
-      function reEnableTaskAdd(){
+      let description_textbox = <HTMLInputElement>document.getElementById('taskdescription');
+      addbutton.setAttribute("disabled","true");
+      description_textbox.setAttribute("disabled","true");
+      const reEnableTaskAdd = function (){
         addbutton.removeAttribute("disabled");
         description_textbox.removeAttribute("disabled");
         description_textbox.value='';
@@ -361,7 +364,7 @@ document.getElementById('addtaskform').addEventListener('submit', function(e) {
       
       // If add an additional annotation with the active url in case the add
       // link checkbox is checked.
-      function withCurrentActiveTabUrl(callback){
+      const withCurrentActiveTabUrl = function (callback){
         // Get url of the current active tab
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
           // since only one tab should be active and in the current window at once
@@ -370,7 +373,7 @@ document.getElementById('addtaskform').addEventListener('submit', function(e) {
           callback(activeTab.url);
         });
       }
-      function withTaskFilters(callback){
+      const withTaskFilters = function (callback){
         chrome.storage.local.get('taskfilters',function(items){
           let taskfilters = items['taskfilters'];
           if (! taskfilters) {
@@ -379,7 +382,7 @@ document.getElementById('addtaskform').addEventListener('submit', function(e) {
           callback(taskfilters);
         });
       }
-      function checkTaskFiltersBeforeSendingApiCall(){
+      const checkTaskFiltersBeforeSendingApiCall = function (){
         if (addFilterCheckbox.checked){
           withTaskFilters(function(taskfilters){
             // Use the last project in the filters list, and all the tasks,
@@ -407,7 +410,7 @@ document.getElementById('addtaskform').addEventListener('submit', function(e) {
           sendApiCall();
         }
       }
-      function sendApiCall(){
+      const sendApiCall = function (){
         // Send the API call create the task
         fetch('https://inthe.am/api/v2/tasks/' ,{
           'method':'POST',
@@ -467,7 +470,7 @@ function parseDescription(description){
   };
   let pure_description = [];
 
-  let newtask = {};
+  let newtask : any = {};
   let words = description.split(" ");
   for (let i in words){
     let word = words[i];

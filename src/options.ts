@@ -2,17 +2,17 @@ import 'jquery';
 import 'bootstrap';
 import './sync';
 
-let intheamapikey = document.getElementById('intheamapikey');
+let intheamapikey = <HTMLInputElement>document.getElementById('intheamapikey');
 chrome.storage.sync.get('intheamapikey', function(items) {
   intheamapikey.value = items['intheamapikey'] ;
 })
 
-let refreshinterval = document.getElementById('refreshinterval');
+let refreshinterval = <HTMLInputElement>document.getElementById('refreshinterval');
 chrome.storage.sync.get('refreshinterval', function(items) {
   refreshinterval.value = items['refreshinterval'] ;
 })
 
-let optionsform = document.getElementById('optionsform');
+let optionsform = <HTMLFormElement>document.getElementById('optionsform');
 optionsform.addEventListener('submit', function(e) {
   chrome.storage.sync.set({'intheamapikey':intheamapikey.value}, function() {
     console.log("Updated the api key.");

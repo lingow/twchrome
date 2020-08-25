@@ -10,7 +10,7 @@ function filterTaskList(tasklist, filters){
   return tasklist;
 }
 
-function syncIntheAm(callback){
+function syncIntheAm(callback?){
   chrome.storage.sync.get('intheamapikey',function(items){
     let apikey = items['intheamapikey'];
     if (apikey) {
@@ -100,12 +100,13 @@ function updateIconBadge(tasklist) {
       break;
     }
   }
+  let badge_text = "";
   if (t > 9999) {  // Only 4 characters fit in the space
-    t = '0x221E';  // ∞ Infinity. Seriously. Look for help.
+    badge_text = '0x221E';  // ∞ Infinity. Seriously. Look for help.
   }else {
-    t = t.toString();
+   badge_text = t.toString();
   }
 
-  chrome.browserAction.setBadgeText({'text':t});
+  chrome.browserAction.setBadgeText({'text':badge_text});
   chrome.browserAction.setBadgeBackgroundColor({'color':urgencybuckets[b].color});
 }

@@ -1,3 +1,5 @@
+import './sync'
+
 chrome.runtime.onInstalled.addListener(function() {
   let sync_defaults = {
     'intheamapikey':'',
@@ -48,9 +50,9 @@ chrome.storage.onChanged.addListener(function(changes,namespace) {
 chrome.alarms.onAlarm.addListener(function(alarm) {
   switch (alarm.name) {
     case 'intheamsyncalarm':
-      syncIntheAm()
+      syncIntheAm();
       break;
     default:
-      console.Log("No action specified for alarm " + alarm.name);
+      console.log("No action specified for alarm " + alarm.name);
   }
 });
