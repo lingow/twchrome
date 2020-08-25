@@ -10,8 +10,7 @@
     ],
 		"background": {
 		  "scripts": [
-        "lib/sync.js",
-        "background/background.js"
+        "background/bundle.js"
       ],
       "persistent":false
 		},

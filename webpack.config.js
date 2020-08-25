@@ -4,8 +4,8 @@ module.exports = {
   mode: "production",
   entry: {
     background: path.join(__dirname, "src/background.ts"),
-    content: path.join(__dirname, "src/content.ts"),
     options: path.join(__dirname, "src/options.ts"),
+    popup: path.join(__dirname, "src/popup.ts"),
   },
   module: {
     rules: [
@@ -20,7 +20,7 @@ module.exports = {
     extensions: [".tsx", ".ts", ".js"],
   },
   output: {
-    filename: "[name].js",
-    path: path.join(__dirname, "dist/js"),
+    filename: "[name]/bundle.js",
+    path: path.join(__dirname, "dist"),
   },
 };

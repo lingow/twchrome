@@ -1,3 +1,9 @@
+import 'jquery';
+import 'popper';
+import 'bootstrap';
+import './sync';
+
+
 const hashCode=s=>{for(var i=0,h;i<s.length;i++)h=Math.imul(31,h)+s.charCodeAt(i)|0;return h}
 
 let badge_colors=[
