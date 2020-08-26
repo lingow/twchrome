@@ -1,4 +1,4 @@
-function filterTaskList(tasklist, filters){
+export function filterTaskList(tasklist, filters){
   for (let i in filters){
     let tf = filters[i];
     if (tf['type'] == "tag"){
@@ -10,7 +10,7 @@ function filterTaskList(tasklist, filters){
   return tasklist;
 }
 
-function syncIntheAm(callback?){
+export function syncIntheAm(callback?){
   chrome.storage.sync.get('intheamapikey',function(items){
     let apikey = items['intheamapikey'];
     if (apikey) {
@@ -49,7 +49,7 @@ let urgencybuckets = [
   {'urgency': 0, 'color': "DarkCyan"}
 ];
 
-function withTaskFilters(callback){
+export function withTaskFilters(callback){
   chrome.storage.local.get('taskfilters',function(items){
     let taskfilters = items['taskfilters'];
     if (! taskfilters) {
@@ -69,7 +69,7 @@ function getTaskUrgencyBucket(urgency){
   return undefined;
 }
 
-function getTaskUrgencyColor(urgency){
+export function getTaskUrgencyColor(urgency){
   let b = getTaskUrgencyBucket(urgency);
   if (! b){
     return undefined;

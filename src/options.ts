@@ -1,6 +1,6 @@
 import 'jquery';
 import 'bootstrap';
-import './sync';
+import { syncIntheAm } from './sync';
 
 let intheamapikey = <HTMLInputElement>document.getElementById('intheamapikey');
 chrome.storage.sync.get('intheamapikey', function(items) {
@@ -23,7 +23,7 @@ optionsform.addEventListener('submit', function(e) {
   })
 });
 
-let syncnowbutton = document.getElementById('syncnowbutton');
+let syncnowbutton = <HTMLButtonElement>document.getElementById('syncnowbutton');
 syncnowbutton.addEventListener('click', function() {
   syncIntheAm();
 });

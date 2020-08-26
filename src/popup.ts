@@ -1,7 +1,7 @@
 import 'jquery';
-import 'popper';
+import 'popper.js';
 import 'bootstrap';
-import './sync';
+import { filterTaskList, syncIntheAm, getTaskUrgencyColor } from './sync';
 
 
 const hashCode=s=>{for(var i=0,h;i<s.length;i++)h=Math.imul(31,h)+s.charCodeAt(i)|0;return h}
@@ -19,12 +19,12 @@ let badge_colors=[
 
 function loadTheTaskList() {
   chrome.storage.local.get(['tasklist','taskfilters'],function(items){
-    let tasklist = document.getElementById("tasklist");
+    let tasklist = <HTMLUListElement>document.getElementById("tasklist");
     tasklist.innerHTML='';
     let servertasklist = items['tasklist']
     let taskfilters = items['taskfilters'];
     if (taskfilters) {
-      let filter_list = document.getElementById("filter-list");
+      let filter_list = <HTMLDivElement>document.getElementById("filter-list");
       servertasklist = filterTaskList(servertasklist,taskfilters);
       for( let i in taskfilters ){
         let tf = taskfilters[i];
@@ -92,8 +92,8 @@ function removeTaskFilter(spec, callback){
 
 function taskToHTMLNode(task){
   let task_listitem =
-    (<Element>(<HTMLTemplateElement>document.getElementById('taskentry_template')).content.cloneNode(true)).querySelector('.list-group-item');
-  let heading = task_listitem.querySelector(".widget-heading");
+    <HTMLLIElement>((<Element>(<HTMLTemplateElement>document.getElementById('taskentry_template')).content.cloneNode(true)).querySelector('.list-group-item'));
+  let heading = <HTMLDivElement>task_listitem.querySelector(".widget-heading");
   heading.appendChild(document.createTextNode(task.description));
 
   let link = <HTMLAnchorElement>task_listitem.querySelector(".task-link");
@@ -102,7 +102,7 @@ function taskToHTMLNode(task){
 
   if (task.project) {
     let project_components = task.project.split(".");
-    let subheading = task_listitem.querySelector(".widget-subheading");
+    let subheading = <HTMLDivElement>task_listitem.querySelector(".widget-subheading");
     for (let i = 0 ; i < project_components.length ; i++) {
       let project_component = project_components[i];
       let a = document.createElement("a");
@@ -126,13 +126,13 @@ function taskToHTMLNode(task){
       tag_a.href="#";
       let tag = task.tags[i];
       let tag_node =
-        (<Element>(<HTMLTemplateElement>document.getElementById('tasktag_template')).content.cloneNode(true)).querySelector(".badge");
+        <HTMLDivElement>(<Element>(<HTMLTemplateElement>document.getElementById('tasktag_template')).content.cloneNode(true)).querySelector(".badge");
       tag_node.appendChild(document.createTextNode(tag));
       tag_a.appendChild(tag_node);
 
       let badge_color=badge_colors[hashCode(tag) % badge_colors.length];
       tag_node.classList.add(badge_color);
-      task_listitem.querySelector(".widget-heading").appendChild(tag_a);
+      (<HTMLDivElement>task_listitem.querySelector(".widget-heading")).appendChild(tag_a);
       tag_a.addEventListener("click", function (){
         addTaskFilter({
           "type": "tag",
@@ -144,8 +144,8 @@ function taskToHTMLNode(task){
   if (task.annotations) {
     for ( let i in task.annotations ){
       let annotation = task.annotations[i];
-      let annotation_node =
-        (<Element>(<HTMLTemplateElement>document.getElementById('taskpill_template')).content.cloneNode(true)).querySelector(".badge");
+      let annotation_node: HTMLDivElement =
+        <HTMLDivElement>(<Element>(<HTMLTemplateElement>document.getElementById('taskpill_template')).content.cloneNode(true)).querySelector(".badge");
       let icon = document.createElement("i");
       icon.classList.add("fa");
       annotation_node.appendChild(icon);
@@ -161,7 +161,7 @@ function taskToHTMLNode(task){
         a.href=annotation;
         a.target="_blank";
         a.appendChild(annotation_node);
-        task_listitem.querySelector(".widget-subheading").appendChild(a);
+        (<HTMLDivElement>task_listitem.querySelector(".widget-subheading")).appendChild(a);
       } else {
         annotation_node.classList.add("badge-info");
         annotation_node.setAttribute("data-toggle","tooltip");
@@ -169,7 +169,7 @@ function taskToHTMLNode(task){
         annotation_node.setAttribute("title",annotation);
         (<any>$(annotation_node)).tooltip();
         icon.classList.add("fa-sticky-note");
-        task_listitem.querySelector(".widget-subheading").appendChild(annotation_node);
+        (<HTMLDivElement>task_listitem.querySelector(".widget-subheading")).appendChild(annotation_node);
       }
     }
   }
@@ -180,7 +180,7 @@ function taskToHTMLNode(task){
       "L":"bg-secondary"
     }
     let bg_color_class = priority_to_bg_map[task.priority] || "bg-info";
-    task_listitem.querySelector(".priority-indicator").classList.add(bg_color_class);
+    (<HTMLDivElement>task_listitem.querySelector(".priority-indicator")).classList.add(bg_color_class);
   }
 
   if (task.urgency || task.urgency == 0) {
@@ -190,7 +190,7 @@ function taskToHTMLNode(task){
     }
   }
 
-  let taskdonebutton = task_listitem.querySelector(".task-done-button");
+  let taskdonebutton = <HTMLButtonElement>task_listitem.querySelector(".task-done-button");
   taskdonebutton.addEventListener("click", function() {
     taskdonebutton.setAttribute("disabled","true");
     heading.classList.add("text-decoration-line-through");
@@ -200,8 +200,8 @@ function taskToHTMLNode(task){
     });
   });
 
-  let taskstartbutton = task_listitem.querySelector(".task-start-button");
-  let taskstarticon = taskstartbutton.querySelector(".task-start-icon");
+  let taskstartbutton = <HTMLButtonElement>task_listitem.querySelector(".task-start-button");
+  let taskstarticon = <HTMLElement>taskstartbutton.querySelector(".task-start-icon");
   function setStartedButton(){
     taskstartbutton.classList.remove("btn-outline-warning");
     taskstartbutton.classList.add("btn-outline-secondary");
@@ -343,14 +343,14 @@ chrome.storage.local.get("add-filter-checkbox",function(items){
   }
 });
 
-document.getElementById('addtaskform').addEventListener('submit', function(e) {
+(<HTMLFormElement>document.getElementById('addtaskform')).addEventListener('submit', function(e) {
   e.preventDefault(); // prevents the page from refreshing on submit.
 
   chrome.storage.sync.get('intheamapikey',function (items){
     let apikey = items['intheamapikey'];
     if (apikey) {
       // Disable the add button to avoid repeated submissions
-      let addbutton = document.getElementById('addtask');
+      let addbutton = <HTMLInputElement>document.getElementById('addtask');
       let description_textbox = <HTMLInputElement>document.getElementById('taskdescription');
       addbutton.setAttribute("disabled","true");
       description_textbox.setAttribute("disabled","true");
@@ -468,13 +468,13 @@ function parseDescription(description){
     "start": /\bsta?r?t?:(\S*)\b/,
     "annotations": /\ban?n?o?t?a?t?i?o?n?s?:(\S*)\b/
   };
-  let pure_description = [];
+  let pure_description: string[] = [];
 
   let newtask : any = {};
   let words = description.split(" ");
   for (let i in words){
     let word = words[i];
-    let m = []; 
+    let m:RegExpMatchArray = []; 
     for ( let k in keywords ) {
       let regex = keywords[k];
       m = word.match(regex);

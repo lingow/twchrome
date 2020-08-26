@@ -1,4 +1,4 @@
-import './sync'
+import { syncIntheAm } from './sync'
 
 chrome.runtime.onInstalled.addListener(function() {
   let sync_defaults = {

@@ -1,5 +1,6 @@
 {
     "name": "Taskwarror for Chrome",
+    "default_locale":"en",
     "version": "1.0",
     "description": "List, add and modify tasks from Chrome",
     "permissions": [
