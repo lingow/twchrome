@@ -1,4 +1,4 @@
-import 'jquery';
+var $ = require('jquery');
 import 'popper.js';
 import 'bootstrap';
 import { filterTaskList, syncIntheAm, getTaskUrgencyColor } from './sync';
