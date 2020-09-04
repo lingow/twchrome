@@ -110,5 +110,73 @@ describe('description',() =>{
       expect(description.parseDescription("an unknown:keyword as description"))
         .toMatchObject({'description':"an unknown:keyword as description"});
     });
+    it('understands single quoted tokens',() => {
+      expect(description.parseDescription("a 'quoted token' "))
+        .toMatchObject({'description':"a quoted token"});
+    });
+    it('understands double quoted tokens',() => {
+      expect(description.parseDescription('a "quoted token" '))
+        .toMatchObject({'description':"a quoted token"});
+    });
+    it('understands double quoted tokens with escaped double quotes',() => {
+      expect(description.parseDescription('a "quoted \\"token" '))
+        .toMatchObject({'description':"a quoted \"token"});
+    });
+    it('understands single quoted tokens with escaped single quotes',() => {
+      expect(description.parseDescription("a 'quoted \\'token' "))
+        .toMatchObject({'description':"a quoted \'token"});
+    });
+    it('understands single quoted tokens with escaped single quotes',() => {
+      expect(description.parseDescription("a 'quoted \\'token' "))
+        .toMatchObject({'description':"a quoted 'token"});
+    });
+    it('understands single quotes within double quotes',() => {
+      expect(description.parseDescription('a "quoted \'token"'))
+        .toMatchObject({'description':"a quoted 'token"});
+    });
+    it('understands double quotes within single quotes',() => {
+      expect(description.parseDescription("a 'quoted \"token'"))
+        .toMatchObject({'description':"a quoted \"token"});
+    });
+    it('understands tags with double quotes',() => {
+      expect(description.parseDescription('+"quoted tag"'))
+        .toMatchObject({'tags':["quoted tag"]});
+    });
+    it('understands tags with single quotes',() => {
+      expect(description.parseDescription("+'quoted tag'"))
+        .toMatchObject({'tags':["quoted tag"]});
+    });
+    it('understands tags with escaped whitespace',() => {
+      expect(description.parseDescription("+escaped\\ whitespace"))
+        .toMatchObject({'tags':["escaped whitespace"]});
+    });
+    it('understands keywords with double quotes',() => {
+      expect(description.parseDescription('annotations:"quoted tag"'))
+        .toMatchObject({'annotations':["quoted tag"]});
+    });
+    it('understands keywords with single quotes',() => {
+      expect(description.parseDescription("annotations:'quoted tag'"))
+        .toMatchObject({'annotations':["quoted tag"]});
+    });
+    it('understands keywords with escaped whitespace',() => {
+      expect(description.parseDescription("annotations:escaped\\ whitespace"))
+        .toMatchObject({'annotations':["escaped whitespace"]});
+    });
+    it('understands comma separated quoted strings for annotations',() => {
+      expect(description.parseDescription("annotations:\"quoted annotation\",'another quoted annotation'"))
+        .toMatchObject({'annotations':["quoted annotation","another quoted annotation"]});
+    });
+    it('understands comma separated quoted strings for tags',() => {
+      expect(description.parseDescription("+\"quoted tag\",'another quoted tag'"))
+        .toMatchObject({'tags':["quoted tag","another quoted tag"]});
+    });
+    it('understands escaped whitespace in comma separated annotations',() => {
+      expect(description.parseDescription("annotations:quoted\\ annotation,another\\ quoted\\ annotation"))
+        .toMatchObject({'annotations':["quoted annotation","another quoted annotation"]});
+    });
+    it('understands escaped whitespace in comma separated tags',() => {
+      expect(description.parseDescription("+quoted\\ tag,another\\ quoted\\ tag"))
+        .toMatchObject({'tags':["quoted tag","another quoted tag"]});
+    });
   });
 });

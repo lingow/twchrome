@@ -15,6 +15,12 @@ module.exports = {
         exclude: /node_modules/,
       },
     ],
+    loaders: [
+      {
+        test: /\.pegjs$/,
+        loader: 'pegjs-loader'
+      }
+    ]
   },
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
