@@ -361,7 +361,8 @@ chrome.storage.local.get("add-filter-checkbox",function(items){
         description_textbox.value='';
       }
       let description = description_textbox.value;
-      let newtask = parseDescription(description);
+      let command = parseDescription(description);
+      let newtask = command['task'];
       
       // If add an additional annotation with the active url in case the add
       // link checkbox is checked.

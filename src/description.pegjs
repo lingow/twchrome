@@ -3,13 +3,13 @@
 }
 
 root
-	= (_)? command:command (_)? {
+	= (_)? commandline:commandline (_)? {
     	// Transform the parsed command to match expected task format
         // https://intheam.readthedocs.io/en/latest/api/task_format.html
-        
+       	let task = commandline['task']; 
         // Description should be a string.
-        if( 'description' in command ){
-        	command['description']=command['description'].join(" ");
+        if( 'description' in task ){
+        	task['description']=task['description'].join(" ");
         }
         // For the following keywords, keep only the latest value
         [
@@ -20,23 +20,44 @@ root
             "until",
             "scheduled",
             "start"].forEach( (keyword) => {
-            if ( keyword in command ){
-            	command[keyword] = command[keyword][command[keyword].length - 1];
+            if ( keyword in task ){
+            	task[keyword] = task[keyword][task[keyword].length - 1];
             }
         });
 
         // For the following keywords, convert to iso string
         ["scheduled","until","wait","due"].forEach((keyword) => {
-            if ( keyword in command ){
-              const parsedDate= chrono.parseDate(command[keyword]);
-            	command[keyword] = parsedDate.toISOString();
+            if ( keyword in task ){
+              const parsedDate= chrono.parseDate(task[keyword]);
+            	task[keyword] = parsedDate.toISOString();
             }
           });
-    	return command;
+    	return commandline;
+    }
+
+commandline
+	= command:(command _)? tokens:tokens {
+    	const ret = {
+        	'command':'filter',
+        	task : tokens
+            };
+        if (command) {
+        	ret['command'] = command[0];
+        }
+        return ret;
     }
 
 command
-  = head:item tail:(_ command)* {
+	= add / filter
+    
+add
+	=("a"("d"("d")?)?){ return "add"}
+    
+filter
+	=("f"("i"("l"("t"("e"("r")?)?)?)?)?) { return "filter"}
+
+tokens
+  = head:item tail:(_ tokens)* {
   	if (tail[0]){
     	tail = tail[0][1];
     } else {
