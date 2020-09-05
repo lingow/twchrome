@@ -1,0 +1,43 @@
+{
+    "name": "Taskwarror for Chrome",
+    "default_locale":"en",
+    "version": "1.0",
+    "description": "List, add and modify tasks from Chrome",
+    "permissions": [
+      "storage",
+      "alarms",
+      "tabs",
+      "https://inthe.am/api/v2/*"
+    ],
+		"background": {
+		  "scripts": [
+        "background/bundle.js"
+      ],
+      "persistent":false
+		},
+    "browser_action": {
+      "default_popup": "popup/popup.html",
+      "default_icon": {
+        "19": "icons/icon19.png",
+        "38": "icons/icon38.png"
+      }
+    },
+    "icons": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "options_page": "options/options.html",
+    "commands": {
+			"_execute_browser_action": {
+				"suggested_key": {
+					"windows": "Alt+Shift+K",
+					"mac": "Alt+Shift+K",
+					"chromeos": "Alt+Shift+K",
+					"linux": "Alt+Shift+K"
+				}
+			}
+    },
+    "manifest_version": 2
+}

@@ -1,0 +1,52 @@
+{
+  "name": "twchrome",
+  "version": "0.1.0",
+  "description": "A Chrome extension for Taskwarrior, using inthe.am as backend.",
+  "scripts": {
+    "build": "webpack",
+    "watch": "webpack -w",
+    "test": "jest",
+    "coverage": "jest --coverage",
+    "lint": "tslint 'src/**/*.ts'",
+    "fmt": "prettier --write src/**/*.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lingow/twchrome.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lingow/twchrome/issues"
+  },
+  "homepage": "https://github.com/lingow/twchrome#readme",
+  "devDependencies": {
+    "@types/chrome": "0.0.86",
+    "@types/jest": "^24.0.13",
+    "@types/node": "^12.0.4",
+    "@types/sinon": "^7.0.12",
+    "@types/sinon-chrome": "^2.2.6",
+    "acorn": "^6.0.0",
+    "jest": "^24.8.0",
+    "pegjs": "^0.10.0",
+    "pegjs-jest": "0.0.2",
+    "pegjs-loader": "^0.5.6",
+    "prettier": "^1.17.1",
+    "sinon": "^7.3.2",
+    "sinon-chrome": "^3.0.1",
+    "ts-jest": "^24.0.2",
+    "ts-lint": "^4.5.1",
+    "ts-loader": "^6.0.2",
+    "tslint": "^6.1.3",
+    "typescript": "^3.5.1",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.2"
+  },
+  "dependencies": {
+    "@types/jquery": "^3.5.1",
+    "bootstrap": "^4.5.2",
+    "chrono-node": "^2.1.8",
+    "jquery": "^3.5.1",
+    "popper.js": "^1.16.1"
+  }
+}
