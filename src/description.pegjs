@@ -1,3 +1,7 @@
+{
+  const chrono = require('chrono-node');
+}
+
 root
 	= (_)? command:command (_)? {
     	// Transform the parsed command to match expected task format
@@ -20,6 +24,14 @@ root
             	command[keyword] = command[keyword][command[keyword].length - 1];
             }
         });
+
+        // For the following keywords, convert to iso string
+        ["scheduled","until","wait","due"].forEach((keyword) => {
+            if ( keyword in command ){
+              const parsedDate= chrono.parseDate(command[keyword]);
+            	command[keyword] = parsedDate.toISOString();
+            }
+          });
     	return command;
     }
 

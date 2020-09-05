@@ -46,37 +46,47 @@ describe('description',() =>{
         .toMatchObject({'depends':['10','11']});
     });
     it('understands "due" and substrings',() =>{
-      expect(description.parseDescription("due:2020-07-10")).toMatchObject({'due':'2020-07-10'});
-      expect(description.parseDescription("du:2020-07-10")).toMatchObject({'due':'2020-07-10'});
+      const event = new Date('2020-07-10');
+      const isostring = event.toISOString()
+      expect(description.parseDescription("due:" + isostring)).toMatchObject({'due':isostring});
+      expect(description.parseDescription("du:" + isostring)).toMatchObject({'due':isostring});
     });
     it('understands "wait" and substrings',() =>{
-      expect(description.parseDescription("wait:2020-07-10")).toMatchObject({'wait':'2020-07-10'});
-      expect(description.parseDescription("wai:2020-07-10")).toMatchObject({'wait':'2020-07-10'});
-      expect(description.parseDescription("wa:2020-07-10")).toMatchObject({'wait':'2020-07-10'});
-      expect(description.parseDescription("w:2020-07-10")).toMatchObject({'wait':'2020-07-10'});
+      const event = new Date('2020-07-10');
+      const isostring = event.toISOString()
+      expect(description.parseDescription("wait:" + isostring)).toMatchObject({'wait':isostring});
+      expect(description.parseDescription("wai:" + isostring)).toMatchObject({'wait':isostring});
+      expect(description.parseDescription("wa:" + isostring)).toMatchObject({'wait':isostring});
+      expect(description.parseDescription("w:" + isostring)).toMatchObject({'wait':isostring});
     });
     it('understands "until" and substrings',() =>{
-      expect(description.parseDescription("until:2020-07-10")).toMatchObject({'until':'2020-07-10'});
-      expect(description.parseDescription("unti:2020-07-10")).toMatchObject({'until':'2020-07-10'});
-      expect(description.parseDescription("unt:2020-07-10")).toMatchObject({'until':'2020-07-10'});
-      expect(description.parseDescription("un:2020-07-10")).toMatchObject({'until':'2020-07-10'});
-      expect(description.parseDescription("u:2020-07-10")).toMatchObject({'until':'2020-07-10'});
+      const event = new Date('2020-07-10');
+      const isostring = event.toISOString()
+      expect(description.parseDescription("until:" + isostring)).toMatchObject({'until':isostring});
+      expect(description.parseDescription("unti:" + isostring)).toMatchObject({'until':isostring});
+      expect(description.parseDescription("unt:" + isostring)).toMatchObject({'until':isostring});
+      expect(description.parseDescription("un:" + isostring)).toMatchObject({'until':isostring});
+      expect(description.parseDescription("u:" + isostring)).toMatchObject({'until':isostring});
     });
     it('understands "scheduled" and substrings',() =>{
-      expect(description.parseDescription("scheduled:2020-07-10")).toMatchObject({'scheduled':'2020-07-10'});
-      expect(description.parseDescription("schedule:2020-07-10")).toMatchObject({'scheduled':'2020-07-10'});
-      expect(description.parseDescription("schedul:2020-07-10")).toMatchObject({'scheduled':'2020-07-10'});
-      expect(description.parseDescription("schedu:2020-07-10")).toMatchObject({'scheduled':'2020-07-10'});
-      expect(description.parseDescription("sched:2020-07-10")).toMatchObject({'scheduled':'2020-07-10'});
-      expect(description.parseDescription("sche:2020-07-10")).toMatchObject({'scheduled':'2020-07-10'});
-      expect(description.parseDescription("sch:2020-07-10")).toMatchObject({'scheduled':'2020-07-10'});
-      expect(description.parseDescription("sc:2020-07-10")).toMatchObject({'scheduled':'2020-07-10'});
+      const event = new Date('2020-07-10');
+      const isostring = event.toISOString()
+      expect(description.parseDescription("scheduled:" + isostring)).toMatchObject({'scheduled':isostring});
+      expect(description.parseDescription("schedule:" + isostring)).toMatchObject({'scheduled':isostring});
+      expect(description.parseDescription("schedul:" + isostring)).toMatchObject({'scheduled':isostring});
+      expect(description.parseDescription("schedu:" + isostring)).toMatchObject({'scheduled':isostring});
+      expect(description.parseDescription("sched:" + isostring)).toMatchObject({'scheduled':isostring});
+      expect(description.parseDescription("sche:" + isostring)).toMatchObject({'scheduled':isostring});
+      expect(description.parseDescription("sch:" + isostring)).toMatchObject({'scheduled':isostring});
+      expect(description.parseDescription("sc:" + isostring)).toMatchObject({'scheduled':isostring});
     });
     it('understands "start" and substrings',() =>{
-      expect(description.parseDescription("start:2020-07-10")).toMatchObject({'start':'2020-07-10'});
-      expect(description.parseDescription("star:2020-07-10")).toMatchObject({'start':'2020-07-10'});
-      expect(description.parseDescription("sta:2020-07-10")).toMatchObject({'start':'2020-07-10'});
-      expect(description.parseDescription("st:2020-07-10")).toMatchObject({'start':'2020-07-10'});
+      const event = new Date('2020-07-10');
+      const isostring = event.toISOString()
+      expect(description.parseDescription("start:" + isostring)).toMatchObject({'start':isostring});
+      expect(description.parseDescription("star:" + isostring)).toMatchObject({'start':isostring});
+      expect(description.parseDescription("sta:" + isostring)).toMatchObject({'start':isostring});
+      expect(description.parseDescription("st:" + isostring)).toMatchObject({'start':isostring});
     });
     it('understands "annotations" and substrings',() =>{
       expect(description.parseDescription("annotations:anannotation")).toMatchObject({'annotations':['anannotation']});
@@ -177,6 +187,38 @@ describe('description',() =>{
     it('understands escaped whitespace in comma separated tags',() => {
       expect(description.parseDescription("+quoted\\ tag,another\\ quoted\\ tag"))
         .toMatchObject({'tags':["quoted tag","another quoted tag"]});
+    });
+    it('understands natural language relative dates for schedule.',() => {
+      var tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const result = description.parseDescription("scheduled:tomorrow");
+      // Dates should match. Disregard hour, minutes, seconds and millis.
+      expect(new Date(result['scheduled']).toDateString())
+        .toBe(tomorrow.toDateString());
+    });
+    it('understands natural language relative dates for until.',() => {
+      var tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const result = description.parseDescription("until:tomorrow");
+      // Dates should match. Disregard hour, minutes, seconds and millis.
+      expect(new Date(result['until']).toDateString())
+        .toBe(tomorrow.toDateString());
+    });
+    it('understands natural language relative dates for due.',() => {
+      var tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const result = description.parseDescription("due:tomorrow");
+      // Dates should match. Disregard hour, minutes, seconds and millis.
+      expect(new Date(result['due']).toDateString())
+        .toBe(tomorrow.toDateString());
+    });
+    it('understands natural language relative dates for wait.',() => {
+      var tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const result = description.parseDescription("wait:tomorrow");
+      // Dates should match. Disregard hour, minutes, seconds and millis.
+      expect(new Date(result['wait']).toDateString())
+        .toBe(tomorrow.toDateString());
     });
   });
 });
