@@ -39,7 +39,12 @@ function loadTheTaskList() {
         a.addEventListener("click",function(){
           removeTaskFilter(tf,updateTaskList);
         });
-        filter_badge.appendChild(document.createTextNode(tf['value'] +  " [x]"));
+        let filterprefix = {
+          'description':'d:',
+          'project':'p:',
+          'tag':'+',
+        }[tf['type']];
+        filter_badge.appendChild(document.createTextNode(filterprefix + tf['value'] +  " [x]"));
         a.appendChild(filter_badge);
         filter_list.appendChild(a);
       }
@@ -56,28 +61,39 @@ function loadTheTaskList() {
 loadTheTaskList();
 
 
-function updateTaskList(){
+async function updateTaskList(){
   // This function should actually
   // Get the stored tasklist
   // Request the server for the new tasklist
   // Get the differences
   // Update the ui to reflect the differences
   // Focus on the task adding textbox
-  syncIntheAm(function() { location.reload();}); // for the lazy
+  return new Promise( resolve => {
+    syncIntheAm(function() { 
+      resolve();
+      location.reload(); // for the lazy
+
+    }); 
+  });
 }
 
-function addTaskFilter(spec, callback){
-  chrome.storage.local.get('taskfilters',function(items){
-    let taskfilters = items['taskfilters'];
-    if (! taskfilters ) {
-      taskfilters=[];
-    }
-    if (! taskfilters.some(tf => tf.value == spec.value && tf.type == spec.type)) {
-      taskfilters.push(spec);
-      chrome.storage.local.set({'taskfilters':taskfilters}, function(){
-        callback(taskfilters)
-      });
-    }
+async function addTaskFilter(spec, callback?) : Promise<string>{
+  return new Promise( resolve => {
+    chrome.storage.local.get('taskfilters',function(items){
+      let taskfilters = items['taskfilters'];
+      if (! taskfilters ) {
+        taskfilters=[];
+      }
+      if (! taskfilters.some(tf => tf.value == spec.value && tf.type == spec.type)) {
+        taskfilters.push(spec);
+        chrome.storage.local.set({'taskfilters':taskfilters}, async function(){
+          if (callback) {
+            await callback(taskfilters)
+          }
+          resolve('ok');
+        });
+      }
+    });
   });
 }
 
@@ -344,114 +360,162 @@ chrome.storage.local.get("add-filter-checkbox",function(items){
   }
 });
 
-(<HTMLFormElement>document.getElementById('addtaskform')).addEventListener('submit', function(e) {
-  e.preventDefault(); // prevents the page from refreshing on submit.
+export async function submitFormAction(e) {
+  return new Promise( resolve => {
+    e.preventDefault(); // prevents the page from refreshing on submit.
 
-  chrome.storage.sync.get('intheamapikey',function (items){
-    let apikey = items['intheamapikey'];
-    if (apikey) {
-      // Disable the add button to avoid repeated submissions
-      let addbutton = <HTMLInputElement>document.getElementById('addtask');
-      let description_textbox = <HTMLInputElement>document.getElementById('taskdescription');
-      addbutton.setAttribute("disabled","true");
-      description_textbox.setAttribute("disabled","true");
-      const reEnableTaskAdd = function (){
-        addbutton.removeAttribute("disabled");
-        description_textbox.removeAttribute("disabled");
-        description_textbox.value='';
-      }
-      let description = description_textbox.value;
-      let command = parseDescription(description);
-      let newtask = command['task'];
-      
-      // If add an additional annotation with the active url in case the add
-      // link checkbox is checked.
-      const withCurrentActiveTabUrl = function (callback){
-        // Get url of the current active tab
-        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-          // since only one tab should be active and in the current window at once
-          // the return variable should only have one entry
-          let activeTab = tabs[0];
-          callback(activeTab.url);
-        });
-      }
-      const withTaskFilters = function (callback){
-        chrome.storage.local.get('taskfilters',function(items){
-          let taskfilters = items['taskfilters'];
-          if (! taskfilters) {
-            taskfilters = [];
-          }
-          callback(taskfilters);
-        });
-      }
-      const checkTaskFiltersBeforeSendingApiCall = function (){
-        if (addFilterCheckbox.checked){
-          withTaskFilters(function(taskfilters){
-            // Use the last project in the filters list, and all the tasks,
-            // The project will not be overriden if it is explicitly specified.
-            for (let i in taskfilters){
-              let tf = taskfilters[i];
-              if (tf['type']=='project'){
-                if (! newtask.project) {
-                  newtask.project=tf['value'];
+    chrome.storage.sync.get('intheamapikey', async function (items){
+      let apikey = items['intheamapikey'];
+      if (apikey) {
+        // Disable the add button to avoid repeated submissions
+        let addbutton = <HTMLInputElement>document.getElementById('addtask');
+        let description_textbox = <HTMLInputElement>document.getElementById('taskdescription');
+        addbutton.setAttribute("disabled","true");
+        description_textbox.setAttribute("disabled","true");
+        const reEnableTaskAdd = function (){
+          addbutton.removeAttribute("disabled");
+          description_textbox.removeAttribute("disabled");
+          description_textbox.value='';
+        }
+        let description = description_textbox.value;
+        let command = parseDescription(description);
+        let newtask = command['task'];
+        
+        if (command['command'] == 'filter' ){
+          for (let key in newtask ){
+            let promises : Promise<string>[] = [];
+            switch(key){
+              case "project":
+                promises.push(addTaskFilter({
+                  'type':'project',
+                  'value':newtask[key]
+                }));
+                break;
+              case "tags":
+                for (let i in newtask[key] ) {
+                  promises.push(addTaskFilter({
+                    'type':'tag',
+                    'value':newtask[key][i]
+                  }));
                 }
-              }
-              if (tf['type']=='tag'){
-                if (! newtask.tags) {
-                  newtask.tags=[];
-                }
-                // Add task only if not already there
-                if ( newtask.tags.indexOf(tf['value']) === -1 ){
-                  newtask.tags.push(tf['value']);
-                }
-              }
+                break;
+              case "description":
+                promises.push(addTaskFilter({
+                  'type':'description',
+                  'value':newtask[key]
+                }));
+                break;
+              default:
             }
-            sendApiCall();
-          });
-        } else {
-          sendApiCall();
+            await Promise.all(promises);
+            reEnableTaskAdd();
+            let msg = 'Applied filters: ' + JSON.stringify(command);
+            console.log(msg);
+            await updateTaskList();
+            resolve('msg');
+          }
+        }
+        if (command['command'] == 'add' ){
+          // If add an additional annotation with the active url in case the add
+          // link checkbox is checked.
+          const withCurrentActiveTabUrl = function (callback){
+            // Get url of the current active tab
+            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+              // since only one tab should be active and in the current window at once
+              // the return variable should only have one entry
+              let activeTab = tabs[0];
+              callback(activeTab.url);
+            });
+          }
+          const withTaskFilters = function (callback){
+            chrome.storage.local.get('taskfilters',function(items){
+              let taskfilters = items['taskfilters'];
+              if (! taskfilters) {
+                taskfilters = [];
+              }
+              callback(taskfilters);
+            });
+          }
+          const checkTaskFiltersBeforeSendingApiCall = function (){
+            if (addFilterCheckbox.checked){
+              withTaskFilters(function(taskfilters){
+                // Use the last project in the filters list, and all the tasks,
+                // The project will not be overriden if it is explicitly specified.
+                for (let i in taskfilters){
+                  let tf = taskfilters[i];
+                  if (tf['type']=='project'){
+                    if (! newtask.project) {
+                      newtask.project=tf['value'];
+                    }
+                  }
+                  if (tf['type']=='tag'){
+                    if (! newtask.tags) {
+                      newtask.tags=[];
+                    }
+                    // Add task only if not already there
+                    if ( newtask.tags.indexOf(tf['value']) === -1 ){
+                      newtask.tags.push(tf['value']);
+                    }
+                  }
+                }
+                sendApiCall();
+              });
+            } else {
+              sendApiCall();
+            }
+          }
+          const sendApiCall = function (){
+            // Send the API call create the task
+            fetch('https://inthe.am/api/v2/tasks/' ,{
+              'method':'POST',
+              'headers': {
+                'Authorization': "Token ".concat(apikey),
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+              },
+              'body': JSON.stringify(newtask)
+            })
+            .then( async response => {
+              let msg;
+              if ( response.ok ) {
+                msg = "Created the task successfully.";
+                console.log(msg)
+                await updateTaskList();
+              } else {
+                msg = "Failed to create the task. Response:" + response ;
+                console.log(msg);
+              }
+              reEnableTaskAdd();
+              resolve(msg);
+            }, 
+            reason => {
+              let msg = "Failed to create the task. Reason:" + reason ;
+              console.log(msg) 
+              reEnableTaskAdd();
+              resolve(msg);
+            });
+          }
+          if (addLinkCheckbox.checked) {
+            withCurrentActiveTabUrl(function(url){
+              if (!newtask.annotations){
+                newtask.annotations = [];
+              }
+              newtask.annotations.push(url);
+              checkTaskFiltersBeforeSendingApiCall();
+            });
+          } else {
+            checkTaskFiltersBeforeSendingApiCall();
+          }
         }
       }
-      const sendApiCall = function (){
-        // Send the API call create the task
-        fetch('https://inthe.am/api/v2/tasks/' ,{
-          'method':'POST',
-          'headers': {
-            'Authorization': "Token ".concat(apikey),
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          'body': JSON.stringify(newtask)
-        })
-        .then( response => {
-          if ( response.ok ) {
-            console.log("Created the task successfully.")
-            updateTaskList();
-          } else {
-            console.log("Failed to create the task. Response:" + response );
-          }
-          reEnableTaskAdd();
-        }, 
-        reason => {
-          console.log("Failed to create the task. Reason:" + reason ) 
-          reEnableTaskAdd();
-        });
+      else {
+        let msg = "Please set an api key in the extension option in order to create tasks.";
+        console.log(msg);
+        resolve(msg);
       }
-      if (addLinkCheckbox.checked) {
-        withCurrentActiveTabUrl(function(url){
-          if (!newtask.annotations){
-            newtask.annotations = [];
-          }
-          newtask.annotations.push(url);
-          checkTaskFiltersBeforeSendingApiCall();
-        });
-      } else {
-        checkTaskFiltersBeforeSendingApiCall();
-      }
-    }
-    else {
-      console.log("Please set an api key in the extension option in order to create tasks.");
-    }
+    });
   });
-});
+}
+(<HTMLFormElement>document.getElementById('addtaskform')).addEventListener('submit',
+                                                                           submitFormAction );
 

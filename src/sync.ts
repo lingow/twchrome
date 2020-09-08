@@ -5,6 +5,8 @@ export function filterTaskList(tasklist, filters){
       tasklist = tasklist.filter(t => t.tags && t.tags.includes(tf['value']));
     } else if ( tf['type'] == 'project' ){
       tasklist = tasklist.filter(t => t.project && t.project.startsWith(tf['value']));
+    } else if ( tf['type'] == 'description' ){
+      tasklist = tasklist.filter(t => t.project && t.description.includes(tf['value']));
     }
   }
   return tasklist;
