@@ -2,7 +2,6 @@ import { syncIntheAm } from './sync'
 
 chrome.runtime.onInstalled.addListener(function() {
   let sync_defaults = {
-    'intheamapikey':'',
     'refreshinterval':2,
   };
   chrome.storage.sync.get(Object.keys(sync_defaults),function(items){
