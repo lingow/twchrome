@@ -61,3 +61,4 @@ typings/
 .next
 
 dist/js
+dist/background/bundle.js

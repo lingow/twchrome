@@ -9,6 +9,7 @@ chrome.runtime.onInstalled.addListener(function() {
       delete sync_defaults['key']
     }
     chrome.storage.sync.set(sync_defaults);
+    syncIntheAm()
   });
   let local_defaults = {
     'tasklist':[]
