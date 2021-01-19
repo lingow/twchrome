@@ -9,10 +9,21 @@
 
 ## Instructions
 
-* Install the extension
+* Clone
+* `npm install`
+* `npm run-script build`
+* Install the extension with "Load Unpacked"
 * Add your intheam api key in the extension options.
 * Click on the extension icon to display the list.
-* Click on the add button to add new task.
+* Add tasks with `add ...` command
+* Filter tasks with any other command 
+  * `by description` keeps tasks including "description" in their description
+  * `project:myproject` keeps tasks within the "myproject" project
+  * `+mytag` keeps tasks with the "mytag" tag set.
+* Remove filters by clicking on them.
+* The funnel icon will include existing tag and project filters in the newly
+  created tasks.
+* The link icon will include current url as an annotation of the task.
 * Click on the green check icon to mark the task as completed.
  
 ## Stack
