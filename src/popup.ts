@@ -111,6 +111,7 @@ function taskToHTMLNode(task){
   let task_listitem =
     <HTMLLIElement>((<Element>(<HTMLTemplateElement>document.getElementById('taskentry_template')).content.cloneNode(true)).querySelector('.list-group-item'));
   let heading = <HTMLDivElement>task_listitem.querySelector(".widget-heading");
+  heading.appendChild(document.createTextNode("["+task.short_id+"] "));
   heading.appendChild(document.createTextNode(task.description));
 
   let link = <HTMLAnchorElement>task_listitem.querySelector(".task-link");
