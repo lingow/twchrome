@@ -1,5 +1,7 @@
 const path = require("path");
 
+const env = process.env.NODE_ENV
+
 module.exports = {
   mode: "production",
   entry: {
@@ -27,5 +29,8 @@ module.exports = {
   output: {
     filename: "[name]/bundle.js",
     path: path.join(__dirname, "dist"),
+  },
+  optimization: {
+    minimize: env === "production"
   },
 };

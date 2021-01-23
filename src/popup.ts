@@ -3,6 +3,7 @@ import 'popper.js';
 import 'bootstrap';
 import { filterTaskList, syncIntheAm, getTaskUrgencyColor } from './sync';
 import { parseDescription } from './description';
+import { isEqual } from 'lodash'
 
 
 const hashCode=s=>{for(var i=0,h;i<s.length;i++)h=Math.imul(31,h)+s.charCodeAt(i)|0;return h}
@@ -60,6 +61,28 @@ function loadTheTaskList() {
 }
 loadTheTaskList();
 
+function DisplayError(message:string){
+  //Ideally this should be a toast besides the console log. 
+  console.log(message);
+}
+
+function getData(sKey:string, sync?:boolean){
+  return new Promise(function(resolve, reject) {
+    let source = sync? chrome.storage.sync : chrome.storage.local;
+    source.get(sKey, function(items) {
+      if (chrome.runtime.lastError) {
+        console.error(chrome.runtime.lastError.message);
+        reject(chrome.runtime.lastError.message);
+      } else {
+        resolve(items[sKey]);
+      }
+    });
+  });
+}
+
+async function GetTaskList(){
+  return await getData('tasklist');
+}
 
 async function updateTaskList(){
   // This function should actually
@@ -68,13 +91,70 @@ async function updateTaskList(){
   // Get the differences
   // Update the ui to reflect the differences
   // Focus on the task adding textbox
-  return new Promise( resolve => {
+  return new Promise<void>( resolve => {
     syncIntheAm(function() { 
       resolve();
       location.reload(); // for the lazy
 
     }); 
   });
+}
+
+function GetMatchingTasks(taskList, selector): any[]{
+  let ret = []
+  let keys = Object.keys(selector);
+  return taskList.filter(t => keys.every(key => {
+    if (Array.isArray(selector[key])){
+      // The array selectors have to be a subset of the array property.
+      let propertySet = new Set(t[key]);
+      return selector[key].every(k => propertySet.has(k));
+    } else {
+      return t[key] == selector[key] 
+    }
+  }))
+}
+
+async function UpdateTask(task): Promise<string>{
+  let apikey = await getData('intheamapikey',true);
+  // Send the API call create the task
+  let response = await fetch('https://inthe.am/api/v2/tasks/' + task.id + "/" ,{
+    'method':'PUT',
+    'headers': {
+      'Authorization': "Token " + apikey,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    'body': JSON.stringify(task)
+  });
+  if (response.ok){
+    return "ok";
+  } else {
+    return response.statusText;
+  }
+}
+
+async function ModifyTask(task,modification): Promise<string>{
+  for (let m in modification){
+    if ( Array.isArray(modification[m])){
+      let modSet = new Set(modification[m]);
+      let taskSet = new Set(task[m]);
+      for ( let mod of modification[m]){
+        if (mod.startsWith("-")){
+          modSet.delete(mod);
+          mod = mod.substring(1);
+          taskSet.delete(mod)
+        }
+      }
+      taskSet = new Set([...modSet,...taskSet]);
+      task[m] = Array.from(taskSet);
+    } else {
+      task[m]=modification[m];
+    }
+    if (modification[m] === "none"){
+      delete task[m];
+    }
+  }
+  return await UpdateTask(task)
 }
 
 async function addTaskFilter(spec, callback?) : Promise<string>{
@@ -361,6 +441,19 @@ chrome.storage.local.get("add-filter-checkbox",function(items){
   }
 });
 
+
+let addbutton = <HTMLInputElement>document.getElementById('addtask');
+let description_textbox = <HTMLInputElement>document.getElementById('taskdescription');
+function DisableTaskAdd() {
+  addbutton.setAttribute("disabled","true");
+  description_textbox.setAttribute("disabled","true");
+}
+const reEnableTaskAdd = function (){
+  addbutton.removeAttribute("disabled");
+  description_textbox.removeAttribute("disabled");
+  description_textbox.value='';
+}
+
 export async function submitFormAction(e) {
   return new Promise( resolve => {
     e.preventDefault(); // prevents the page from refreshing on submit.
@@ -369,15 +462,7 @@ export async function submitFormAction(e) {
       let apikey = items['intheamapikey'];
       if (apikey) {
         // Disable the add button to avoid repeated submissions
-        let addbutton = <HTMLInputElement>document.getElementById('addtask');
-        let description_textbox = <HTMLInputElement>document.getElementById('taskdescription');
-        addbutton.setAttribute("disabled","true");
-        description_textbox.setAttribute("disabled","true");
-        const reEnableTaskAdd = function (){
-          addbutton.removeAttribute("disabled");
-          description_textbox.removeAttribute("disabled");
-          description_textbox.value='';
-        }
+        DisableTaskAdd();
         let description = description_textbox.value;
         let command = parseDescription(description);
         let newtask = command['task'];
@@ -507,6 +592,28 @@ export async function submitFormAction(e) {
           } else {
             checkTaskFiltersBeforeSendingApiCall();
           }
+        }
+        if (command['command'] == 'modify'){
+          DisableTaskAdd();
+          let taskList = await GetTaskList();
+          let matchingTasksList = GetMatchingTasks(taskList,command['selector']);
+          if ( ! (matchingTasksList && matchingTasksList.length) ){
+            DisplayError("No tasks matched the provided selectors");
+          } else{
+            let taskModificationPromises : Promise<string>[] = [];
+            for(let t of matchingTasksList){
+              let modifiedTaskPromise:Promise<string> = ModifyTask(t,command['task']);
+              taskModificationPromises.push(modifiedTaskPromise);
+            }
+            let results = await Promise.all(taskModificationPromises);
+            for( let r of results ){
+              if ( r != "ok"){
+                DisplayError("Failed to modify task: " + r);
+              }
+            }
+            await updateTaskList();
+          }
+          reEnableTaskAdd();
         }
       }
       else {

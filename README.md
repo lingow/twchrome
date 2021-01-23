@@ -6,6 +6,8 @@
 * Mark completed with a click
 * Create new tasks similarly to how it's done in the commandline.
 * Display number of urgent items in different preset urgency buckets.
+* Edit tasks with `<selectors> modify <modifications>` where selectors and 
+  modifications are task properties, and selector can also be task short id.
 
 ## Instructions
 

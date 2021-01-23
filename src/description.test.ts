@@ -242,5 +242,88 @@ describe('description',() =>{
         'command':'filter',
       });
     });
+    it.each`
+      keyword     
+      ${"modify"} 
+      ${"modif"}  
+      ${"modi"}   
+      ${"mod"}    
+      ${"mo"}     
+      ${"m"}      
+    `
+    ("understands modify command when beginning with $keyword",({keyword})=>{
+      expect(description.parseDescription('1 ' + keyword + " atask")).toMatchObject({
+        'command':'modify',
+      });
+    });
+    it.each`
+      id     
+      ${1}
+      ${0}
+      ${23}
+      ${999}
+    `
+    ("understands modify id=$id selector",({id})=>{
+      expect(description.parseDescription(id + ' modify atask')).toMatchObject({
+        'command':'modify',
+        'selector':{
+          'short_id':id
+        }
+      });
+    });
+    it.each`
+      keyword     
+      ${'project'}
+      ${'priority'}
+    `
+    ("understands modify $keyword selector",({keyword})=>{
+      expect(description.parseDescription(keyword + ':something modify atask')).toMatchObject({
+        'command':'modify',
+        'selector':{
+          [keyword]:'something'
+        }
+      });
+    });
+    it.each`
+      keyword     
+      ${'scheduled'}
+      ${'due'}
+      ${'wait'}
+      ${'start'}
+      ${'until'}
+    `
+    ("understands modify $keyword selector",({keyword})=>{
+      expect(description.parseDescription(keyword + ':2021-01-20T04:44:59.000Z modify atask')).toMatchObject({
+        'command':'modify',
+        'selector':{
+          [keyword]:'2021-01-20T04:44:59.000Z'
+        }
+      });
+    });
+    it("understands multiple selectors with modify",()=>{
+      expect(description.parseDescription('pro:some_project +some_tag modify atask')).toMatchObject({
+        'command':'modify',
+        'selector':{
+          project:'some_project',
+          tags: ['some_tag']
+        }
+      });
+    });
+    it("understands repeated tags as selectors with modify",()=>{
+      expect(description.parseDescription('+tag_a +tag_b modify atask')).toMatchObject({
+        'command':'modify',
+        'selector':{
+          tags: ['tag_a','tag_b']
+        }
+      });
+    });
+    it("understands repeated annotations as selectors with modify",()=>{
+      expect(description.parseDescription('annotation:annotation_a anno:annotation_b modify atask')).toMatchObject({
+        'command':'modify',
+        'selector':{
+          annotations: ['annotation_a','annotation_b']
+        }
+      });
+    });
   });
 });

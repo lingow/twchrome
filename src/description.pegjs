@@ -11,6 +11,11 @@ root
         if( 'description' in task ){
         	task['description']=task['description'].join(" ");
         }
+
+        let selector;
+        if ('selector' in commandline){
+          selector = commandline['selector'];
+        }
         // For the following keywords, keep only the latest value
         [
         	"project",
@@ -23,6 +28,11 @@ root
             if ( keyword in task ){
             	task[keyword] = task[keyword][task[keyword].length - 1];
             }
+            if (selector){
+              if ( keyword in selector ){
+                selector[keyword] = selector[keyword][selector[keyword].length - 1];
+              }
+            }
         });
 
         // For the following keywords, convert to iso string
@@ -31,30 +41,91 @@ root
               const parsedDate= chrono.parseDate(task[keyword]);
             	task[keyword] = parsedDate.toISOString();
             }
+            if (selector){
+              if ( keyword in selector ){
+                const parsedDate= chrono.parseDate(selector[keyword]);
+                selector[keyword] = parsedDate.toISOString();
+              }
+            }
           });
     	return commandline;
     }
 
 commandline
-	= command:(command _)? tokens:tokens {
-    	const ret = {
-        	'command':'filter',
-        	task : tokens
-            };
-        if (command) {
-        	ret['command'] = command[0];
-        }
-        return ret;
-    }
+  = mod_command / add_command / filter_command
 
-command
-	= add / filter
+mod_command
+ = selector:selector _ mod _ tokens:tokens {
+   return {
+   "command":"modify",
+   "selector":selector,
+   "task":tokens
+   }
+ }
+ 
+add_command
+ = add _ tokens:tokens {
+   return {
+   "command":"add",
+   "task":tokens
+   }
+ }
+
+filter_command
+ = (filter _ )? tokens:tokens
+ {
+   return {
+   "command":"filter",
+   "task":tokens
+   }
+ }
+
+selector
+  = id:short_id / tokens:selector_tokens
+  
+selector_tokens
+  = head:selector_item tail:(_ selector_tokens)* {
+  	if (tail[0]){
+    	tail = tail[0][1];
+    } else {
+    	tail = {}
+    }
+    for( let key in head ){
+    	if (key in tail) {
+        	if (! tail[key]){
+            	tail[key]=[];
+            }
+        	tail[key].unshift(...head[key])
+        } else {
+        	tail[key] = head[key]
+        }
+    }
+    return tail;
+  }
+  
+short_id
+  = [0-9]+ {
+  	return {"short_id":parseInt(text(), 10)};
+  }
+
+selector_item
+  = keyword:keyword payload:payload {
+      let ret = {}
+      if (! payload){
+      	payload=[];
+      }
+      ret[keyword] = payload;
+      return ret;
+    }
     
 add
 	=("a"("d"("d")?)?){ return "add"}
     
 filter
 	=("f"("i"("l"("t"("e"("r")?)?)?)?)?) { return "filter"}
+
+mod
+  =("m"("o"("d"("i"("f"("y")?)?)?)?)?) { return "modify"}
 
 tokens
   = head:item tail:(_ tokens)* {
