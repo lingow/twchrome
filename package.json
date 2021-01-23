@@ -26,6 +26,7 @@
     "@types/node": "^12.0.4",
     "@types/sinon": "^7.0.12",
     "@types/sinon-chrome": "^2.2.6",
+    "@zerodevx/svelte-toast": "^0.1.4",
     "acorn": "^6.0.0",
     "jest": "^24.8.0",
     "pegjs": "^0.10.0",

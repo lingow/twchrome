@@ -3,8 +3,17 @@ import 'popper.js';
 import 'bootstrap';
 import { filterTaskList, syncIntheAm, getTaskUrgencyColor } from './sync';
 import { parseDescription } from './description';
-import { isEqual } from 'lodash'
+import { SvelteToast, toast } from '@zerodevx/svelte-toast'
 
+const app = new SvelteToast({
+  // Set where the toast container should be appended into
+  target: document.body,
+  props: {
+    options: {
+      duration: 1000,
+    }
+  }
+})
 
 const hashCode=s=>{for(var i=0,h;i<s.length;i++)h=Math.imul(31,h)+s.charCodeAt(i)|0;return h}
 
@@ -62,8 +71,18 @@ function loadTheTaskList() {
 loadTheTaskList();
 
 function DisplayError(message:string){
-  //Ideally this should be a toast besides the console log. 
+  console.error(message);
+  toast.push(message,{
+    theme: {
+      '--toastBackground': '#F56565',
+      '--toastProgressBackground': '#C53030'
+    }
+  });
+}
+
+function DisplayMessage(message:string){
   console.log(message);
+  toast.push(message);
 }
 
 function getData(sKey:string, sync?:boolean){
@@ -324,7 +343,7 @@ function taskToHTMLNode(task){
       "method": "POST",
       "onsuccess": updateTaskList,
       "onfailure": function() {
-        console.log("Failed to mark task as " + startstop + ": " + task.id);
+        DisplayError("Failed to mark task as " + startstop + ": " + task.id);
       }
     });
   });
@@ -354,7 +373,7 @@ function apiCall(options){
         options['onfailure']();
       });
 		} else {
-			console.log("API key has to be set in the extension options.");
+			DisplayError("API key has to be set in the extension options.");
       options['onfailure']();
 		}
 	});
@@ -373,7 +392,7 @@ function markTaskAsDone(task, node, onfailure) {
 			})
 			.then( response => {
         if ( response.ok ) {
-          console.log("Marked task as done in server: " + task.id)
+          DisplayMessage("Marked task as done in server: " + task.short_id)
           // Update the tasklist to remove it from the list
           chrome.storage.local.get('tasklist',function(items){
             let tasklist = items['tasklist'];
@@ -386,16 +405,16 @@ function markTaskAsDone(task, node, onfailure) {
             });
           });
         } else {
-          console.log("Failed to update the task in the server: " + task.id + ". Response:" + response );
+          DisplayError("Failed to update the task in the server: " + task.id + ". Response:" + response );
           onfailure();
         }
       }, 
 			reason => {
-        console.log("Failed to update the task in the server: " + task.id + ". Reason:" + reason ) 
+        DisplayError("Failed to update the task in the server: " + task.id + ". Reason:" + reason ) 
         onfailure();
       });
 		} else {
-			console.log("API key has to be set in the extension options.");
+			DisplayError("API key has to be set in the extension options.");
       onfailure();
 		}
 	});
@@ -496,7 +515,7 @@ export async function submitFormAction(e) {
             await Promise.all(promises);
             reEnableTaskAdd();
             let msg = 'Applied filters: ' + JSON.stringify(command);
-            console.log(msg);
+            DisplayMessage(msg);
             await updateTaskList();
             resolve('msg');
           }
@@ -565,18 +584,18 @@ export async function submitFormAction(e) {
               let msg;
               if ( response.ok ) {
                 msg = "Created the task successfully.";
-                console.log(msg)
+                DisplayMessage(msg)
                 await updateTaskList();
               } else {
                 msg = "Failed to create the task. Response:" + response ;
-                console.log(msg);
+                DisplayError(msg);
               }
               reEnableTaskAdd();
               resolve(msg);
             }, 
             reason => {
               let msg = "Failed to create the task. Reason:" + reason ;
-              console.log(msg) 
+              DisplayError(msg) 
               reEnableTaskAdd();
               resolve(msg);
             });
@@ -618,7 +637,7 @@ export async function submitFormAction(e) {
       }
       else {
         let msg = "Please set an api key in the extension option in order to create tasks.";
-        console.log(msg);
+        DisplayError(msg);
         resolve(msg);
       }
     });
